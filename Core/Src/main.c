@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_hid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,13 +49,17 @@ typedef struct
 /* USER CODE BEGIN PM */
 
 #define DEBOUNCE_TICKS							30
+#define REPORT_SIZE									5
 
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+extern USBD_HandleTypeDef hUsbDeviceFS;
 volatile button_t button;
+
+uint8_t report_buf[REPORT_SIZE] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -123,7 +127,10 @@ int main(void)
 			button.current_state = button.pin_state;
 		}
 		
+		report_buf[0] = button.current_state ? 0x08 : 0x00;		// GUI/COMMAND (APPLE)
+		report_buf[2] = button.current_state ? 0x1a : 0x00;		// W
 		
+		USBD_HID_SendReport(&hUsbDeviceFS, report_buf, REPORT_SIZE); 
 		
     /* USER CODE END WHILE */
 
