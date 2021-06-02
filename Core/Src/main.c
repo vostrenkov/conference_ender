@@ -49,7 +49,7 @@ typedef struct
 /* USER CODE BEGIN PM */
 
 #define DEBOUNCE_TICKS							30
-#define REPORT_SIZE									5
+#define REPORT_SIZE									8
 
 /* USER CODE END PM */
 
@@ -127,10 +127,12 @@ int main(void)
 			button.current_state = button.pin_state;
 		}
 		
-		report_buf[0] = button.current_state ? 0x08 : 0x00;		// GUI/COMMAND (APPLE)
-		report_buf[2] = button.current_state ? 0x1a : 0x00;		// W
+		report_buf[0] = !button.current_state ? 0x08 : 0x00;		// GUI/COMMAND (APPLE)
+		report_buf[2] = !button.current_state ? 0x1a : 0x00;		// W
 		
 		USBD_HID_SendReport(&hUsbDeviceFS, report_buf, REPORT_SIZE); 
+		
+		HAL_Delay(10);
 		
     /* USER CODE END WHILE */
 
