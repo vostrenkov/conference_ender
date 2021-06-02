@@ -39,6 +39,9 @@ typedef struct
 	
 } button_t;
 
+uint8_t mode = 0;
+uint8_t ctrl_symb = 0;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -112,6 +115,9 @@ int main(void)
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+	
+	button.pin_state = 1;
+	button.current_state = 1;
 
   /* USER CODE END 2 */
 
@@ -127,8 +133,12 @@ int main(void)
 			button.current_state = button.pin_state;
 		}
 		
-		report_buf[0] = !button.current_state ? 0x08 : 0x00;		// GUI/COMMAND (APPLE)
-		report_buf[2] = !button.current_state ? 0x1a : 0x00;		// W
+		mode = HAL_GPIO_ReadPin(MODE_IN_GPIO_Port, MODE_IN_Pin);
+		
+		ctrl_symb = mode ? 0x01 : 0x08;
+		
+		report_buf[0] = !button.current_state ? ctrl_symb : 0x00;		// CTRL/COMMAND
+		report_buf[2] = !button.current_state ? 0x1a : 0x00;				// W
 		
 		USBD_HID_SendReport(&hUsbDeviceFS, report_buf, REPORT_SIZE); 
 		
@@ -199,12 +209,29 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(OUT_LOW_GPIO_Port, OUT_LOW_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : BUTTON_Pin */
   GPIO_InitStruct.Pin = BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : OUT_LOW_Pin */
+  GPIO_InitStruct.Pin = OUT_LOW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(OUT_LOW_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : MODE_IN_Pin */
+  GPIO_InitStruct.Pin = MODE_IN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(MODE_IN_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
