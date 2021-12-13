@@ -124,7 +124,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
+  {		
 		// Button debounce
 		if (button.changed && (HAL_GetTick() - button.time_last >= DEBOUNCE_TICKS))
 		{
@@ -140,10 +140,17 @@ int main(void)
 		report_buf[0] = !button.current_state ? ctrl_symb : 0x00;		// CTRL/COMMAND
 		report_buf[2] = !button.current_state ? 0x1a : 0x00;				// W
 		
-		USBD_HID_SendReport(&hUsbDeviceFS, report_buf, REPORT_SIZE); 
+		USBD_HID_SendReport(&hUsbDeviceFS, report_buf, REPORT_SIZE); 		
 		
+		if (!button.current_state && button.changed) 
+		{
+			HAL_Delay(500);
+			report_buf[0] = 0x00;	
+			report_buf[2] = 0x28;	// Enter
+		
+			USBD_HID_SendReport(&hUsbDeviceFS, report_buf, REPORT_SIZE);
+		}	
 		HAL_Delay(10);
-		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
